@@ -83,8 +83,8 @@ export default function Page() {
   }
 
   const totalBales = inventory.reduce((sum, inv) => sum + inv.quantity, 0)
-  const activeOrdersCount = orders.filter((o) => !o.isPreOrder).length
-  const preOrdersCount = orders.filter((o) => o.isPreOrder).length
+  const activeOrdersCount = orders.filter((o) => !o.is_pre_order).length
+  const preOrdersCount = orders.filter((o) => o.is_pre_order).length
   const completedOrdersCount = completedOrders.length
 
   return (
@@ -103,7 +103,7 @@ export default function Page() {
         {activeTab === "dashboard" && (
           <div className="space-y-6">
             <ProductSelector selectedType={selectedType} onTypeChange={setSelectedType} />
-            <InventoryDashboard inventory={inventory} onUpdateInventory={updateInventory} />
+            <InventoryDashboard />
           </div>
         )}
 

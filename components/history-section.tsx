@@ -45,9 +45,9 @@ export function HistorySection({ completedOrders }: HistorySectionProps) {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold text-lg">{order.customerName}</h3>
+                      <h3 className="font-semibold text-lg">{order.customer_name}</h3>
                       <p className="text-sm text-muted-foreground">
-                        {order.quantity}x {getTypeName(order.baleType)}
+                        {order.quantity}x {getTypeName(order.bale_type)}
                       </p>
                     </div>
                     {getStatusBadge(order.status)}
@@ -55,20 +55,20 @@ export function HistorySection({ completedOrders }: HistorySectionProps) {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-muted-foreground">Bestelldatum:</span>
-                      <p>{new Date(order.orderDate).toLocaleDateString("de-DE")}</p>
+                      <p>{new Date(order.order_date).toLocaleDateString("de-DE")}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Abholdatum:</span>
-                      <p>{new Date(order.pickupDate).toLocaleDateString("de-DE")}</p>
+                      <p>{new Date(order.pickup_date).toLocaleDateString("de-DE")}</p>
                     </div>
                     <div>
                       <span className="text-muted-foreground">Zuvor:</span>
-                      <p>{order.deliveryPreferred ? "Ja" : "Nein"}</p>
+                      <p>{order.delivery_preferred ? "Ja" : "Nein"}</p>
                     </div>
-                    {order.completedAt && (
+                    {order.completed_at && (
                       <div>
                         <span className="text-muted-foreground">Abgeschlossen:</span>
-                        <p>{new Date(order.completedAt).toLocaleDateString("de-DE")}</p>
+                        <p>{new Date(order.completed_at).toLocaleDateString("de-DE")}</p>
                       </div>
                     )}
                   </div>

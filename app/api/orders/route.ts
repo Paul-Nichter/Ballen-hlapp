@@ -23,14 +23,14 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("orders")
       .insert({
-        customer_name: body.customerName,
-        bale_type: body.baleType,
+        customer_name: body.customer_name,
+        bale_type: body.bale_type,
         quantity: body.quantity,
         status: "pending",
-        order_date: body.orderDate,
-        pickup_date: body.pickupDate,
-        delivery_preferred: body.deliveryPreferred,
-        is_pre_order: body.isPreOrder,
+        order_date: body.order_date,
+        pickup_date: body.pickup_date,
+        delivery_preferred: body.delivery_preferred,
+        is_pre_order: body.is_pre_order,
       })
       .select()
       .single()
@@ -40,7 +40,7 @@ export async function POST(request: Request) {
     // Add history entry
     await supabase.from("history").insert({
       action: "order_created",
-      details: `Bestellung erstellt: ${body.customerName} - ${body.quantity}x ${body.baleType}`,
+      details: `Bestellung erstellt: ${body.customer_name} - ${body.quantity}x ${body.bale_type}`,
     })
 
     return NextResponse.json(data)

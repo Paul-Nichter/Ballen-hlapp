@@ -17,14 +17,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { baleType, amount } = await request.json()
+    const { bale_type, amount } = await request.json()
     const supabase = await createClient()
 
     // Get current inventory
     const { data: current, error: fetchError } = await supabase
       .from("inventory")
       .select("*")
-      .eq("bale_type", baleType)
+      .eq("bale_type", bale_type)
       .single()
 
     if (fetchError) throw fetchError
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("inventory")
       .update({ quantity: newQuantity, updated_at: new Date().toISOString() })
-      .eq("bale_type", baleType)
+      .eq("bale_type", bale_type)
       .select()
       .single()
 
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     // Add history entry
     await supabase.from("history").insert({
       action: amount > 0 ? "inventory_increase" : "inventory_decrease",
-      details: `${baleType}: ${amount > 0 ? "+" : ""}${amount} (Neuer Bestand: ${newQuantity})`,
+      details: `${bale_type}: ${amount > 0 ? "+" : ""}${amount} (Neuer Bestand: ${newQuantity})`,
     })
 
     return NextResponse.json(data)

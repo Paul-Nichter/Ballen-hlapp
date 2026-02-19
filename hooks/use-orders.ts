@@ -11,13 +11,13 @@ export function useOrders() {
   })
 
   const createOrder = async (order: {
-    customerName: string
-    baleType: BaleType
+    customer_name: string
+    bale_type: BaleType
     quantity: number
-    orderDate: string
-    pickupDate: string
-    deliveryPreferred: boolean
-    isPreOrder: boolean
+    order_date: string
+    pickup_date: string
+    delivery_preferred: boolean
+    is_pre_order: boolean
   }) => {
     try {
       const response = await fetch("/api/orders", {

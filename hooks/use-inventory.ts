@@ -13,7 +13,7 @@ export function useInventory() {
       const response = await fetch("/api/inventory", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ baleType, amount }),
+        body: JSON.stringify({ bale_type: baleType, amount }),
       })
 
       if (!response.ok) throw new Error("Failed to update inventory")

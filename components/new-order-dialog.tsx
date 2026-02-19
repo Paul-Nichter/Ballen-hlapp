@@ -20,13 +20,13 @@ import type { BaleType } from "@/lib/types"
 
 interface NewOrderDialogProps {
   onCreateOrder: (order: {
-    customerName: string
-    baleType: BaleType
+    customer_name: string
+    bale_type: BaleType
     quantity: number
-    orderDate: string
-    pickupDate: string
-    deliveryPreferred: boolean
-    isPreOrder: boolean
+    order_date: string
+    pickup_date: string
+    delivery_preferred: boolean
+    is_pre_order: boolean
   }) => void
 }
 
@@ -44,13 +44,13 @@ export function NewOrderDialog({ onCreateOrder }: NewOrderDialogProps) {
     if (!customerName || !quantity || !pickupDate) return
 
     onCreateOrder({
-      customerName,
-      baleType,
+      customer_name: customerName,
+      bale_type: baleType,
       quantity: Number.parseInt(quantity),
-      orderDate,
-      pickupDate,
-      deliveryPreferred,
-      isPreOrder,
+      order_date: orderDate,
+      pickup_date: pickupDate,
+      delivery_preferred: deliveryPreferred,
+      is_pre_order: isPreOrder,
     })
 
     setCustomerName("")

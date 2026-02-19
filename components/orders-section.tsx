@@ -8,13 +8,13 @@ interface OrdersSectionProps {
   orders: Order[]
   inventory: Inventory[]
   onCreateOrder: (order: {
-    customerName: string
-    baleType: BaleType
+    customer_name: string
+    bale_type: BaleType
     quantity: number
-    orderDate: string
-    pickupDate: string
-    deliveryPreferred: boolean
-    isPreOrder: boolean
+    order_date: string
+    pickup_date: string
+    delivery_preferred: boolean
+    is_pre_order: boolean
   }) => void
   onCompleteOrder: (id: string) => void
   onCancelOrder: (id: string) => void
@@ -27,11 +27,11 @@ export function OrdersSection({
   onCompleteOrder,
   onCancelOrder,
 }: OrdersSectionProps) {
-  const activeOrders = orders.filter((o) => !o.isPreOrder)
-  const preOrders = orders.filter((o) => o.isPreOrder)
+  const activeOrders = orders.filter((o) => !o.is_pre_order)
+  const preOrders = orders.filter((o) => o.is_pre_order)
 
   const canFulfillOrder = (order: Order) => {
-    const inv = inventory.find((i) => i.baleType === order.baleType)
+    const inv = inventory.find((i) => i.bale_type === order.bale_type)
     return inv ? inv.quantity >= order.quantity : false
   }
 

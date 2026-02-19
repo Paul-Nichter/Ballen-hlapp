@@ -17,6 +17,7 @@ export interface Order {
   pickup_date: string
   delivery_preferred: boolean
   is_pre_order: boolean
+  completed_at: string | null
   created_at: string
 }
 

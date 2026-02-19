@@ -28,7 +28,7 @@ export function OrderCard({ order, canFulfill, onComplete, onCancel }: OrderCard
   }
 
   const getStatusBadge = () => {
-    if (order.isPreOrder) {
+    if (order.is_pre_order) {
       return <Badge variant="secondary">Vorbestellung</Badge>
     }
     if (order.status === "pending") {
@@ -42,9 +42,9 @@ export function OrderCard({ order, canFulfill, onComplete, onCancel }: OrderCard
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-lg">{order.customerName}</CardTitle>
+            <CardTitle className="text-lg">{order.customer_name}</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              {order.quantity}x {getTypeName(order.baleType)}
+              {order.quantity}x {getTypeName(order.bale_type)}
             </p>
           </div>
           {getStatusBadge()}
@@ -54,15 +54,15 @@ export function OrderCard({ order, canFulfill, onComplete, onCancel }: OrderCard
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Bestelldatum:</span>
-            <span>{new Date(order.orderDate).toLocaleDateString("de-DE")}</span>
+            <span>{new Date(order.order_date).toLocaleDateString("de-DE")}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Abholdatum:</span>
-            <span>{new Date(order.pickupDate).toLocaleDateString("de-DE")}</span>
+            <span>{new Date(order.pickup_date).toLocaleDateString("de-DE")}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Zuvor:</span>
-            <span>{order.deliveryPreferred ? "Ja" : "Nein"}</span>
+            <span>{order.delivery_preferred ? "Ja" : "Nein"}</span>
           </div>
           <div className="flex items-center gap-2 pt-2">
             {canFulfill ? (
