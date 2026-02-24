@@ -18,7 +18,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const supabase = await createClient()
   const body = await request.json()
-  const { customer, product, quantity, order_date, delivery_date, notes, is_preorder, preferred, price_per_unit, customer_address } = body
+  const { customer, items, order_date, delivery_date, notes, is_preorder, preferred, customer_address } = body
 
   // Generate invoice number
   const { data: counter, error: counterFetchError } = await supabase
@@ -37,12 +37,17 @@ export async function POST(request: Request) {
       .eq("id", 1)
   }
 
+  // For backward compatibility, store first item in legacy columns
+  const firstItem = items && items.length > 0 ? items[0] : null
+
   const { data, error } = await supabase
     .from("orders")
     .insert({
       customer,
-      product,
-      quantity,
+      product: firstItem?.product || "Stroh",
+      quantity: firstItem?.quantity || 0,
+      price_per_unit: firstItem?.price_per_unit || 2.5,
+      items: items || [],
       order_date,
       delivery_date,
       notes: notes || null,
@@ -51,7 +56,6 @@ export async function POST(request: Request) {
       status: "ausstehend",
       invoice_number: invoiceNumber,
       customer_address: customer_address || null,
-      price_per_unit: price_per_unit || 2.5,
     })
     .select()
     .single()
@@ -79,22 +83,29 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Order not found" }, { status: 404 })
   }
 
-  if (action === "fulfill") {
-    // Deduct from inventory
-    const { data: inv } = await supabase
-      .from("inventory")
-      .select("*")
-      .eq("name", order.product)
-      .single()
+  // Resolve items: use new items column, or fall back to legacy single-product columns
+  const orderItems = order.items && Array.isArray(order.items) && order.items.length > 0
+    ? order.items
+    : [{ product: order.product, quantity: order.quantity, price_per_unit: order.price_per_unit }]
 
-    if (inv) {
-      await supabase
+  if (action === "fulfill") {
+    // Deduct from inventory for each item
+    for (const item of orderItems) {
+      const { data: inv } = await supabase
         .from("inventory")
-        .update({
-          quantity: Math.max(0, inv.quantity - order.quantity),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", inv.id)
+        .select("*")
+        .eq("name", item.product)
+        .single()
+
+      if (inv) {
+        await supabase
+          .from("inventory")
+          .update({
+            quantity: Math.max(0, inv.quantity - item.quantity),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", inv.id)
+      }
     }
 
     // Move to history as completed
@@ -108,6 +119,7 @@ export async function PATCH(request: Request) {
       invoice_number: order.invoice_number,
       customer_address: order.customer_address,
       price_per_unit: order.price_per_unit,
+      items: orderItems,
     })
 
     // Delete from active orders
@@ -126,6 +138,7 @@ export async function PATCH(request: Request) {
       invoice_number: order.invoice_number,
       customer_address: order.customer_address,
       price_per_unit: order.price_per_unit,
+      items: orderItems,
     })
 
     // Delete from active orders

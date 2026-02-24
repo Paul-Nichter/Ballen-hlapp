@@ -7,6 +7,12 @@ import { Calendar, CheckCircle, XCircle, Loader2, Download } from "lucide-react"
 import { generateInvoicePDF } from "@/lib/generate-invoice-pdf"
 import useSWR from "swr"
 
+type OrderItem = {
+  product: string
+  quantity: number
+  price_per_unit: number
+}
+
 type HistoryItem = {
   id: string
   customer: string
@@ -19,6 +25,14 @@ type HistoryItem = {
   invoice_number: string | null
   customer_address: string | null
   price_per_unit: number | null
+  items: OrderItem[] | null
+}
+
+function getOrderItems(item: HistoryItem): OrderItem[] {
+  if (item.items && Array.isArray(item.items) && item.items.length > 0) {
+    return item.items
+  }
+  return [{ product: item.product, quantity: item.quantity, price_per_unit: item.price_per_unit ?? 2.5 }]
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -30,15 +44,14 @@ export function Historie() {
     try {
       const orderDate = new Date(item.order_date)
       const invoiceDate = `${String(orderDate.getDate()).padStart(2, "0")}.${String(orderDate.getMonth() + 1).padStart(2, "0")}.${orderDate.getFullYear()}`
+      const items = getOrderItems(item)
 
       const pdfBlob = await generateInvoicePDF({
         invoiceNumber: item.invoice_number || "---",
         invoiceDate,
         customer: item.customer,
         customerAddress: item.customer_address || "",
-        product: item.product,
-        quantity: item.quantity,
-        pricePerUnit: item.price_per_unit ?? 2.5,
+        items,
       })
 
       const url = URL.createObjectURL(pdfBlob)
@@ -76,6 +89,7 @@ export function Historie() {
           {history.map((item) => {
             const completedDate = new Date(item.completed_at)
             const dateStr = `${completedDate.getDate()}.${completedDate.getMonth() + 1}.${completedDate.getFullYear()}`
+            const items = getOrderItems(item)
 
             return (
               <Card key={item.id} className="p-4">
@@ -97,11 +111,15 @@ export function Historie() {
                         </Badge>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{item.product === "Heu" ? "\uD83C\uDF3F" : "\uD83C\uDF3E"}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {item.quantity}x {item.product}
-                      </span>
+                    <div className="flex flex-col gap-1">
+                      {items.map((orderItem, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="text-lg">{orderItem.product === "Heu" || orderItem.product === "Großballen Heu" ? "\uD83C\uDF3F" : "\uD83C\uDF3E"}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {orderItem.quantity}x {orderItem.product}
+                          </span>
+                        </div>
+                      ))}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
