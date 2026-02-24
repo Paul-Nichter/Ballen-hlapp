@@ -1,13 +1,17 @@
 import jsPDF from "jspdf"
 
+type InvoiceItem = {
+  product: string
+  quantity: number
+  price_per_unit: number
+}
+
 type InvoiceData = {
   invoiceNumber: string
   invoiceDate: string
   customer: string
   customerAddress: string
-  product: string
-  quantity: number
-  pricePerUnit: number
+  items: InvoiceItem[]
 }
 
 export async function generateInvoicePDF(data: InvoiceData): Promise<Blob> {
@@ -28,7 +32,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Blob> {
     // Continue without image
   }
 
-  const totalAmount = data.quantity * data.pricePerUnit
+  const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.price_per_unit, 0)
 
   // ============ HEADER ============
   doc.setFont("helvetica", "bold")
@@ -137,22 +141,34 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Blob> {
     Gerstenstroh: "HD Ballen Gerstenstroh",
     Weizenstroh: "HD Ballen Weizenstroh",
     Heu: "HD Ballen Heu",
+    "Gro\u00dfballen Heu": "Gro\u00dfballen Heu",
   }
 
-  // Table row
-  const rowY = tableTop + 18
+  // Table rows - one per item
+  const rowSpacing = 8
   doc.setFont("helvetica", "normal")
   doc.setFontSize(9)
-  doc.text("1", tableLeft + 4, rowY)
-  doc.text(productNames[data.product] || `HD Ballen ${data.product}`, colPos.beschreibung, rowY)
-  doc.text(String(data.quantity), colPos.anzahl + 4, rowY)
-  doc.text("stk", colPos.bezug + 2, rowY)
-  doc.text(`\u20AC     ${data.pricePerUnit.toFixed(2).replace(".", ",")}`, colPos.satz - 4, rowY)
-  doc.text(totalAmount.toFixed(2).replace(".", ","), colPos.betrag + 18, rowY, { align: "right" })
-  doc.text("0%", colPos.mwst + 5, rowY)
 
-  // Table body lines
-  const tableBottom = tableTop + 70
+  for (let i = 0; i < data.items.length; i++) {
+    const item = data.items[i]
+    const rowY = tableTop + 10 + i * rowSpacing
+    const lineAmount = item.quantity * item.price_per_unit
+
+    doc.text(String(i + 1), tableLeft + 4, rowY)
+    doc.text(productNames[item.product] || `HD Ballen ${item.product}`, colPos.beschreibung, rowY)
+    doc.text(String(item.quantity), colPos.anzahl + 4, rowY)
+    doc.text("stk", colPos.bezug + 2, rowY)
+    doc.text(`\u20AC     ${item.price_per_unit.toFixed(2).replace(".", ",")}`, colPos.satz - 4, rowY)
+    doc.text(lineAmount.toFixed(2).replace(".", ","), colPos.betrag + 18, rowY, { align: "right" })
+    doc.text("0%", colPos.mwst + 5, rowY)
+  }
+
+  // Table body lines - extend based on number of items
+  const minTableHeight = 70
+  const itemsHeight = data.items.length * rowSpacing + 16
+  const tableHeight = Math.max(minTableHeight, itemsHeight)
+  const tableBottom = tableTop + tableHeight
+
   doc.setLineWidth(0.3)
   doc.line(tableLeft, tableTop + 2, tableLeft, tableBottom)
   doc.line(colPos.beschreibung - 2, tableTop + 2, colPos.beschreibung - 2, tableBottom)
@@ -206,10 +222,20 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Blob> {
   doc.setFontSize(11)
   doc.text(totalAmount.toFixed(2).replace(".", ","), totalsValueX - 3, totalY, { align: "right" })
 
+  // ============ KLEINUNTERNEHMER DISCLAIMER ============
+  const disclaimerY = totalY + 16
+  doc.setFont("helvetica", "italic")
+  doc.setFontSize(8)
+  doc.setTextColor(80, 80, 80)
+  const disclaimerText = "* Da ich Kleinunternehmer bin, wird gem\u00E4\u00DF \u00A7 19 UStG keine Umsatzsteuer berechnet."
+  const disclaimerWidth = doc.getTextWidth(disclaimerText)
+  doc.text(disclaimerText, (pageWidth - disclaimerWidth) / 2, disclaimerY)
+
   // ============ FOOTER ============
   const footerY = 265
   doc.setLineWidth(0.5)
   doc.setDrawColor(0, 0, 0)
+  doc.setTextColor(0, 0, 0)
   doc.line(25, footerY - 5, 185, footerY - 5)
 
   doc.setFontSize(8)
