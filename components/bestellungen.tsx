@@ -18,6 +18,12 @@ type OrderItem = {
   price_per_unit: number
 }
 
+type FormItem = {
+  product: string
+  quantity: string
+  price_per_unit: string
+}
+
 type Order = {
   id: string
   customer: string
@@ -66,12 +72,12 @@ export function Bestellungen() {
     customer_address: "",
   })
 
-  const [formItems, setFormItems] = useState<OrderItem[]>([
-    { product: "Weizenstroh", quantity: 1, price_per_unit: 2.5 },
+  const [formItems, setFormItems] = useState<FormItem[]>([
+    { product: "Weizenstroh", quantity: "1", price_per_unit: "2.5" },
   ])
 
   const addItem = () => {
-    setFormItems((prev) => [...prev, { product: "Weizenstroh", quantity: 1, price_per_unit: 2.5 }])
+    setFormItems((prev) => [...prev, { product: "Weizenstroh", quantity: "1", price_per_unit: "2.5" }])
   }
 
   const removeItem = (index: number) => {
@@ -79,7 +85,7 @@ export function Bestellungen() {
     setFormItems((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const updateItem = (index: number, field: keyof OrderItem, value: string | number) => {
+  const updateItem = (index: number, field: keyof FormItem, value: string) => {
     setFormItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
     )
@@ -166,7 +172,7 @@ export function Bestellungen() {
       toast({ title: "Fehler", description: "Bitte alle Pflichtfelder ausfüllen", variant: "destructive" })
       return
     }
-    if (formItems.some((item) => !item.product || item.quantity < 1)) {
+    if (formItems.some((item) => !item.product || item.quantity === "" || Number(item.quantity) < 1 || item.price_per_unit === "" || Number(item.price_per_unit) < 0)) {
       toast({ title: "Fehler", description: "Bitte alle Produkte korrekt ausfüllen", variant: "destructive" })
       return
     }
@@ -174,12 +180,17 @@ export function Bestellungen() {
     try {
       const today = new Date()
       const orderDate = `${today.getDate()}.${today.getMonth() + 1}.${today.getFullYear()}`
+      const parsedItems: OrderItem[] = formItems.map((item) => ({
+        product: item.product,
+        quantity: parseInt(item.quantity) || 1,
+        price_per_unit: parseFloat(item.price_per_unit) || 0,
+      }))
       await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customer: formData.customer,
-          items: formItems,
+          items: parsedItems,
           order_date: orderDate,
           delivery_date: formData.delivery_date,
           is_preorder: formData.is_preorder,
@@ -191,7 +202,7 @@ export function Bestellungen() {
       refreshAll()
       setShowForm(false)
       setFormData({ customer: "", delivery_date: "", is_preorder: false, notes: "", customer_address: "" })
-      setFormItems([{ product: "Weizenstroh", quantity: 1, price_per_unit: 2.5 }])
+      setFormItems([{ product: "Weizenstroh", quantity: "1", price_per_unit: "2.5" }])
       toast({ title: "Bestellung erstellt", description: "Neue Bestellung wurde hinzugefügt" })
     } catch {
       toast({ title: "Fehler", description: "Konnte Bestellung nicht erstellen", variant: "destructive" })
@@ -306,7 +317,7 @@ export function Bestellungen() {
                       type="number"
                       min={1}
                       value={item.quantity}
-                      onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 1)}
+                      onChange={(e) => updateItem(index, "quantity", e.target.value)}
                     />
                   </div>
                   <div className="w-32">
@@ -317,7 +328,7 @@ export function Bestellungen() {
                       min={0}
                       step={0.1}
                       value={item.price_per_unit}
-                      onChange={(e) => updateItem(index, "price_per_unit", parseFloat(e.target.value) || 0)}
+                      onChange={(e) => updateItem(index, "price_per_unit", e.target.value)}
                     />
                   </div>
                   <Button
