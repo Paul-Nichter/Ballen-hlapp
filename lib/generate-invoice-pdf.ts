@@ -12,6 +12,7 @@ type InvoiceData = {
   customer: string
   customerAddress: string
   items: InvoiceItem[]
+  status?: "pending" | "fulfilled" | "cancelled"
 }
 
 export async function generateInvoicePDF(data: InvoiceData): Promise<Blob> {
@@ -251,6 +252,65 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<Blob> {
   doc.text("Tel.:   07478/3380867", 75, footerY + 4)
   doc.text("Mobil: 01573/7948061", 75, footerY + 8)
   doc.text("Email: info@kleinballenmafia-frommenhausen.de", 75, footerY + 12)
+
+  // ============ STORNIERT WATERMARK (if cancelled) ============
+  if (data.status === "cancelled") {
+    doc.setFont("helvetica", "bold")
+    doc.setFontSize(60)
+    doc.setTextColor(200, 50, 50)
+    
+    // Save current state
+    const stornoText = "STORNIERT"
+    const textWidth = doc.getTextWidth(stornoText)
+    
+    // Draw rotated "STORNIERT" text across the page
+    doc.saveGraphicsState()
+    
+    // Position in center of page and rotate
+    const centerX = pageWidth / 2
+    const centerY = 148 // A4 height / 2
+    
+    // Draw border rectangle around text
+    doc.setDrawColor(200, 50, 50)
+    doc.setLineWidth(3)
+    
+    // Translate to center and rotate
+    const angle = -35 * (Math.PI / 180)
+    
+    // Calculate rotated position
+    const rotatedX = centerX - (textWidth / 2) * Math.cos(angle)
+    const rotatedY = centerY - (textWidth / 2) * Math.sin(angle)
+    
+    // Use text with rotation by manually positioning
+    doc.text(stornoText, centerX, centerY, { 
+      align: "center",
+      angle: -35
+    })
+    
+    // Draw rectangle border around the text (rotated)
+    const rectWidth = textWidth + 20
+    const rectHeight = 30
+    
+    // Draw corners of rotated rectangle
+    const cos = Math.cos(angle)
+    const sin = Math.sin(angle)
+    const hw = rectWidth / 2
+    const hh = rectHeight / 2
+    
+    const corners = [
+      { x: centerX + (-hw * cos - (-hh) * sin), y: centerY + (-hw * sin + (-hh) * cos) },
+      { x: centerX + (hw * cos - (-hh) * sin), y: centerY + (hw * sin + (-hh) * cos) },
+      { x: centerX + (hw * cos - hh * sin), y: centerY + (hw * sin + hh * cos) },
+      { x: centerX + (-hw * cos - hh * sin), y: centerY + (-hw * sin + hh * cos) },
+    ]
+    
+    doc.line(corners[0].x, corners[0].y, corners[1].x, corners[1].y)
+    doc.line(corners[1].x, corners[1].y, corners[2].x, corners[2].y)
+    doc.line(corners[2].x, corners[2].y, corners[3].x, corners[3].y)
+    doc.line(corners[3].x, corners[3].y, corners[0].x, corners[0].y)
+    
+    doc.restoreGraphicsState()
+  }
 
   return doc.output("blob")
 }

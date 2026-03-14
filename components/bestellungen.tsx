@@ -152,6 +152,7 @@ export function Bestellungen() {
         customer: order.customer,
         customerAddress: order.customer_address || "",
         items,
+        status: order.status,
       })
 
       const url = URL.createObjectURL(pdfBlob)

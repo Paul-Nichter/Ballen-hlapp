@@ -52,6 +52,7 @@ export function Historie() {
         customer: item.customer,
         customerAddress: item.customer_address || "",
         items,
+        status: item.status,
       })
 
       const url = URL.createObjectURL(pdfBlob)
